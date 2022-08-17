@@ -13,19 +13,12 @@ runs:
     - name: create kubesealer directory
       working-directory: ${{ runner.temp }}
       shell: bash
-      run: |
-        ls
-        pwd
-        mkdir kubesealer
-        pwd
-        ls
-        cd ${{ runner.temp }}/kubesealer
+      run: mkdir kubesealer
 
     - name: setup env
       working-directory: ${{ runner.temp }}/kubesealer
       shell: bash
       run: |
-
         echo "DEBUG=turo-kubesealer:*" > .env
         # shellcheck disable=SC2129
         echo "OP_TOKEN=${{ inputs.op-token }}" >> .env
@@ -37,7 +30,7 @@ runs:
       run: echo "${{ inputs.op-credentials-json-base64 }}" | base64 -d > 1password-credentials.json
 
     - name: setup docker-compose.yaml
-      working-directory: ${{ runner.temp }}
+      working-directory: ${{ runner.temp }}/kubesealer
       shell: bash
       run: |
 
@@ -73,16 +66,19 @@ runs:
           data:
 
         EOF
+
+    - name: docker versions
+      shell: bash
+      run: |
         docker --version
-        pwd
-        ls
+        docker-compose --version
 
     - name: start 1password connect
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: pwd && docker-compose up -d op-connect-api op-connect-sync
+      run: docker-compose up -d op-connect-api op-connect-sync
 
     - name: logs
       shell: bash
@@ -104,10 +100,13 @@ runs:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
       run: |
+        echo "List running docker containers"
         docker ps -a
         if [ -f docker-compose.yaml ]; then
+          echo "Terminate docker-compose"
           docker-compose down --remove-orphans
         fi
+        echo "List running docker containers"
         docker ps -a
 
     - name: cleanup kubesealer directory
