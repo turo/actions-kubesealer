@@ -1,0 +1,31 @@
+name: "golang: Lint"
+description: GitHub Action that lints a golang based repository via [action-pre-commit](https://github.com/open-turo/action-pre-commit)
+inputs:
+  checkout-repo:
+    required: false
+    description: Perform checkout as first step of action
+    default: "true"
+  github-token:
+    required: true
+    description: GitHub token that can checkout the consumer repository. e.g. 'secrets.GITHUB_TOKEN'
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      if: inputs.checkout-repo
+      with:
+        fetch-depth: 0
+    - name: Setup tools
+      ## Installs version of golang found in .go-version
+      uses: open-turo/action-setup-tools@v1
+    - name: Authorize
+      uses: open-turo/action-git-auth@v2
+      with:
+        github-personal-access-token: ${{ inputs.github-token }}
+    - name: Run npm ci if needed
+      if: hashFiles('package-lock.json') != ''
+      shell: bash
+      run: npm ci
+    - name: Pre-commit
+      uses: open-turo/action-pre-commit@v1

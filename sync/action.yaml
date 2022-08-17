@@ -1,0 +1,113 @@
+name: "kubesealer: sync"
+description: GitHub Action that uses kubesealer to sync sealed secrets from secret templates
+inputs:
+  op-token:
+    required: true
+    description: Token used to communicate with 1Password Connect API
+  op-credentials-json-base64:
+    required: true
+    description: Base64 encoded JSON containing credentials for 1Password Connect API
+runs:
+  using: composite
+  steps:
+    - name: create kubesealer directory
+      if: steps.changes.outputs.secret-templates == 'true'
+      working-directory: ${{ runner.temp }}
+      shell: bash
+      run: |
+        ls
+        mkdir kubesealer
+
+    - name: setup env
+      working-directory: ${{ runner.temp }}/kubesealer
+      shell: bash
+      run: |
+
+        echo "DEBUG=turo-kubesealer:*" > .env
+        # shellcheck disable=SC2129
+        echo "OP_TOKEN=${{ inputs.op-token }}" >> .env
+        echo "OP_SERVER_URL=http://op-connect-api:8080" >> .env
+
+    - name: setup 1password connect credentials
+      working-directory: ${{ runner.temp }}/kubesealer
+      shell: bash
+      run: echo "${{ inputs.op-credentials-json-base64 }}" | base64 -d > 1password-credentials.json
+
+    - name: setup docker-compose.yaml
+      working-directory: ${{ runner.temp }}
+      shell: bash
+      run: |
+
+        cat << EOF > docker-compose.yaml
+        version: "3.4"
+
+        services:
+          op-connect-api:
+            image: 1password/connect-api:latest
+            ports:
+              - "8080:8080"
+            volumes:
+              - "./1password-credentials.json:/home/opuser/.op/1password-credentials.json"
+              - "data:/home/opuser/.op/data"
+            healthcheck:
+              test: ["CMD", "curl", "-f", "http://localhost:8080/heartbeat"]
+              interval: 2s
+              timeout: 1s
+              retries: 5
+              start_period: 5s
+          op-connect-sync:
+            image: 1password/connect-sync:latest
+            ports:
+              - "8081:8080"
+            volumes:
+              - "./1password-credentials.json:/home/opuser/.op/1password-credentials.json"
+              - "data:/home/opuser/.op/data"
+          kubesealer:
+            image: turo/kubesealer:latest
+            env_file: .env
+
+        volumes:
+          data:
+
+        EOF
+        docker --version
+
+    - name: start 1password connect
+      shell: bash
+      env:
+        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+      working-directory: ${{ runner.temp }}/kubesealer
+      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml up -d op-connect-api op-connect-sync
+
+    - name: logs
+      shell: bash
+      env:
+        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+      working-directory: ${{ runner.temp }}/kubesealer
+      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml logs
+
+    - name: kubesealer sync
+      shell: bash
+      env:
+        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+      working-directory: ${{ runner.temp }}/kubesealer
+      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
+
+    - name: cleanup kubesealer
+      if: always()
+      shell: bash
+      env:
+        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+      working-directory: ${{ runner.temp }}/kubesealer
+      run: |
+        docker ps -a
+        if [ -f docker-compose.yaml ]; then
+          docker-compose down --remove-orphans
+        fi
+        docker ps -a
+
+    - name: cleanup kubesealer directory
+      if: always()
+      working-directory: ${{ runner.temp }}
+      shell: bash
+      run: rm -rf kubesealer

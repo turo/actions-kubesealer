@@ -1,0 +1,85 @@
+name: "kubesealer: check PR for changes"
+description: GitHub Action that checks to see if any changes need to be synchronized in a PR
+inputs:
+  github-token:
+    required: true
+    description: Token used to communicate with GitHub API
+  op-token:
+    required: true
+    description: Token used to communicate with 1Password Connect API
+  op-credentials-json-base64:
+    required: true
+    description: Base64 encoded JSON containing credentials for 1Password Connect API
+runs:
+  using: composite
+  steps:
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          secret-templates:
+            - '**/*secret-template*.yaml'
+            - '**/*secrets-template*.yaml'
+
+    - if: steps.changes.outputs.secret-templates != 'true'
+      name: Skipping
+      shell: bash
+      run: echo "Skipping - no secret templates were changed"
+
+    - uses: actions/checkout@v2
+      if: steps.changes.outputs.secret-templates == 'true'
+
+    - name: run sync
+      if: steps.changes.outputs.secret-templates == 'true'
+      uses: turo/actions-kubesealer/sync@v1
+      with:
+        op-token: ${{ inputs.op-token }}
+        op-credentials-json-base64: ${{ inputs.op-credentials-json-base64 }}
+
+    - name: diff
+      if: steps.changes.outputs.secret-templates == 'true'
+      shell: bash
+      run: git diff
+
+    - name: check for changes
+      if: steps.changes.outputs.secret-templates == 'true'
+      shell: bash
+      run: |
+        if [[ $(git diff --stat) != '' ]]; then
+          git status
+          echo "::error ::SealedSecrets are out of date, add a comment '@kubesealer run' to seal secrets"
+          echo ""
+          echo "Note: these changes could be in the 'main' branch - if so, please update them in the 'main' branch before running kubesealer on this branch"
+          exit 1
+        fi
+
+    - name: Check for run instructions
+      if: always()
+      uses: peter-evans/find-comment@v1
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: "github-actions[bot]"
+        body-includes: "@kubesealer run"
+
+    - name: Create instructions comment
+      if: steps.changes.outputs.secret-templates == 'true' && failure() && steps.fc.outputs.comment-id == ''
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          There are sealed secrets that need updating with kubesealer.
+
+          To run kubesealer on this PR, add a comment with the message:
+          ```
+          @kubesealer run
+          ```
+          If you have issues, please each out in [#devops](https://team-turo.slack.com/archives/C1ZP61K7S)
+
+    - name: Delete instructions comment
+      if: (steps.changes.outputs.secret-templates != 'true' || success()) && steps.fc.outputs.comment-id != ''
+      uses: jungwinter/comment@v1
+      with:
+        type: delete
+        comment_id: ${{ steps.fc.outputs.comment-id }}
+        token: ${{ inputs.github-token }}
