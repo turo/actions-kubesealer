@@ -1,0 +1,94 @@
+name: "kubesealer: update PR with sealed secrets"
+description: GitHub Action that runs and creates a commit against the current pr with the sealed secrets
+inputs:
+  github-token:
+    required: true
+    description: Token used to communicate with GitHub API
+  op-token:
+    required: true
+    description: Token used to communicate with 1Password Connect API
+  op-credentials-json-base64:
+    required: true
+    description: Base64 encoded JSON containing credentials for 1Password Connect API
+runs:
+  using: composite
+  steps:
+    - uses: xt0rted/pull-request-comment-branch@v1
+      id: comment-branch
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: khan/pull-request-comment-trigger@master
+      name: Indicate starting checking serets - 👀
+      id: check
+      with:
+        trigger: "@kubesealer run"
+        prefix_only: true
+        reaction: eyes
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+    - name: checkout branch from comment
+      if: steps.check.outputs.triggered == 'true'
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        ref: ${{ steps.comment-branch.outputs.head_ref }}
+        token: ${{ secrets.ROLLSBOT_GITHUB_ACTIONS_TOKEN }}
+
+    - name: run sync
+      if: steps.check.outputs.triggered == 'true'
+      uses: turo/actions-kubesealer/sync@v1
+      with:
+        op-token: ${{ inputs.op-token }}
+        op-credentials-json-base64: ${{ inputs.op-credentials-json-base64 }}
+
+    - name: diff
+      id: diff
+      if: steps.check.outputs.triggered == 'true'
+      shell: bash
+      run: |
+        git diff
+        if [[ $(git diff --stat) != '' ]]; then
+          echo "::set-output name=files_changed::true"
+        fi
+
+    - name: Confirm secrets are updated - 🚀
+      id: secrets-updated
+      uses: khan/pull-request-comment-trigger@master
+      if: steps.check.outputs.triggered == 'true' && steps.diff.outputs.files_changed == 'true'
+      with:
+        trigger: "@kubesealer run"
+        prefix_only: true
+        reaction: rocket
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+    - name: push secrets to branch
+      if: steps.check.outputs.triggered == 'true'
+      uses: EndBug/add-and-commit@v7 # https://github.com/marketplace/actions/add-commit
+      with:
+        # The arguments for the `git add` command (see the paragraph below for more info)
+        # add only sealed-secret files
+        add: '["**/*sealed-secret.yaml",  "**/*secret-ref.patch.yaml"]'
+
+        # The name of the user that will be displayed as the author of the commit
+        # Default: author of the commit that triggered the run
+        author_name: Github Action
+
+        # The email of the user that will be displayed as the author of the commit
+        author_email: devops+githubactions@turo.com
+
+        # The message for the commit
+        # Default: 'Commit from GitHub Actions (name of the workflow)'
+        message: "fix(kubesealer): update sealed secrets - automatic"
+
+        # The flag used on the pull strategy. Use NO-PULL to avoid the action pulling at all.
+        # Default: '--no-rebase'
+        # pull_strategy: 'NO-PULL or --no-rebase or --no-ff or --rebase'
+
+        # Whether to push the commit and, if any, its tags to the repo. It can also be used to set the git push arguments (see the paragraph below for more info)
+        # Default: true
+        push: true
+
+        branch: ${{ steps.comment-branch.outputs.head_ref }}
