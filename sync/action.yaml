@@ -1,7 +1,7 @@
 name: "kubesealer: Lint"
 description: GitHub Action that lints a golang based repository via [action-pre-commit](https://github.com/open-turo/action-pre-commit)
 inputs:
-  github-token:
+  github-personal-access-token:
     required: true
     description: Token used to communicate with GitHub API that can create PRs
   op-token:
@@ -30,6 +30,7 @@ runs:
       uses: peter-evans/create-pull-request@v3
       id: cpr
       with:
+        token: ${{ inputs.github-personal-access-token }}
         branch: kubesealer-main
         base: main
         commit-message: "fix(kubesealer): updates sealed secrets - automated action"
