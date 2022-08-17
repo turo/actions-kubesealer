@@ -93,7 +93,6 @@ runs:
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
-      working-directory: ${{ runner.temp }}/kubesealer
       run: docker-compose -f ${RUNNER_TEMP}/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
 
     - name: cleanup kubesealer
