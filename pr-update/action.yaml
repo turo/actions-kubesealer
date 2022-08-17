@@ -32,7 +32,6 @@ runs:
       if: steps.check.outputs.triggered == 'true'
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
         ref: ${{ steps.comment-branch.outputs.head_ref }}
         token: ${{ secrets.ROLLSBOT_GITHUB_ACTIONS_TOKEN }}
 
