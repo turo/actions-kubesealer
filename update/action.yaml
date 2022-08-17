@@ -16,7 +16,7 @@ runs:
     - uses: xt0rted/pull-request-comment-branch@v1
       id: comment-branch
       with:
-        repo_token: ${{ input.github-personal-access-token }}
+        repo_token: ${{ inputs.github-personal-access-token }}
 
     - uses: khan/pull-request-comment-trigger@master
       name: Indicate starting checking serets - 👀
@@ -26,14 +26,14 @@ runs:
         prefix_only: true
         reaction: eyes
       env:
-        GITHUB_TOKEN: "${{ input.github-personal-access-token }}"
+        GITHUB_TOKEN: "${{ inputs.github-personal-access-token }}"
 
     - name: checkout branch from comment
       if: steps.check.outputs.triggered == 'true'
       uses: actions/checkout@v2
       with:
         ref: ${{ steps.comment-branch.outputs.head_ref }}
-        token: ${{ input.github-personal-access-token }}
+        token: ${{ inputs.github-personal-access-token }}
 
     - name: run sync
       if: steps.check.outputs.triggered == 'true'

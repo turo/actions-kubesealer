@@ -17,7 +17,6 @@ runs:
       uses: actions/checkout@v3
 
     - name: run sync
-      if: steps.changes.outputs.secret-templates == 'true'
       uses: turo/actions-kubesealer/run-sync@v1
       with:
         op-token: ${{ inputs.op-token }}
