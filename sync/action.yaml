@@ -80,21 +80,21 @@ runs:
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml up -d op-connect-api op-connect-sync
+      run: docker-compose up -d op-connect-api op-connect-sync
 
     - name: logs
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml logs
+      run: docker-compose logs
 
     - name: kubesealer sync
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose -f /tmp/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
+      run: docker-compose -f ${RUNNER_TEMP}/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
 
     - name: cleanup kubesealer
       if: always()
