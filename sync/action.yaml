@@ -74,13 +74,15 @@ runs:
 
         EOF
         docker --version
+        pwd
+        ls
 
     - name: start 1password connect
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose up -d op-connect-api op-connect-sync
+      run: pwd && docker-compose up -d op-connect-api op-connect-sync
 
     - name: logs
       shell: bash
