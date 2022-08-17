@@ -37,7 +37,7 @@ runs:
 
     - name: run sync
       if: steps.check.outputs.triggered == 'true'
-      uses: turo/actions-kubesealer/sync@v1
+      uses: turo/actions-kubesealer/run-sync@v1
       with:
         op-token: ${{ inputs.op-token }}
         op-credentials-json-base64: ${{ inputs.op-credentials-json-base64 }}
