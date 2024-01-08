@@ -76,28 +76,28 @@ runs:
     - name: start 1password connect
       shell: bash
       env:
-        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+        COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
       run: docker-compose up -d op-connect-api op-connect-sync
 
     - name: logs
       shell: bash
       env:
-        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+        COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
       run: docker-compose logs
 
     - name: kubesealer sync
       shell: bash
       env:
-        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+        COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       run: docker-compose -f ${RUNNER_TEMP}/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
 
     - name: cleanup kubesealer
       if: always()
       shell: bash
       env:
-        COMPOSE_PROJECT_NAME: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt }}
+        COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
       run: |
         echo "List running docker containers"
