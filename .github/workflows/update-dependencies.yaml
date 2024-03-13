@@ -1,0 +1,26 @@
+name: Update dependencies
+concurrency: update-dependencies
+
+on:
+  schedule:
+    # Every day at midnight
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+  issue_comment:
+    types:
+      - edited
+  pull_request:
+    types:
+      - edited
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    name: Update dependencies
+    # Only run in turo-dependency-manager PRs or when manually triggered or as part of a schedule
+    if: (github.event_name == 'issue_comment' && github.event.issue.user.login == 'turo-dependency-manager') || (github.event_name == 'pull_request' && github.actor == 'turo-dependency-manager') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Update dependencies
+        uses: open-turo/action-renovate@v1
+        with:
+          github-token: ${{ secrets.TURO_GITHUB_DEPENDENCY_MANAGER_TOKEN }}
