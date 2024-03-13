@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# script/bootstrap: Resolve all dependencies that the application requires to
+#                   run.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Local only checks
+if [[ $CI != "true" ]]; then
+  echo -e "==>  Setting up commit hooks"
+  pre-commit install
+  pre-commit install --hook-type commit-msg
+fi
