@@ -32,40 +32,7 @@ runs:
     - name: setup docker-compose.yaml
       working-directory: ${{ runner.temp }}/kubesealer
       shell: bash
-      run: |
-
-        cat << EOF > docker-compose.yaml
-        version: "3.4"
-
-        services:
-          op-connect-api:
-            image: 1password/connect-api:latest
-            ports:
-              - "8080:8080"
-            volumes:
-              - "./1password-credentials.json:/home/opuser/.op/1password-credentials.json"
-              - "data:/home/opuser/.op/data"
-            healthcheck:
-              test: ["CMD", "curl", "-f", "http://localhost:8080/heartbeat"]
-              interval: 2s
-              timeout: 1s
-              retries: 5
-              start_period: 5s
-          op-connect-sync:
-            image: 1password/connect-sync:latest
-            ports:
-              - "8081:8080"
-            volumes:
-              - "./1password-credentials.json:/home/opuser/.op/1password-credentials.json"
-              - "data:/home/opuser/.op/data"
-          kubesealer:
-            image: turo/kubesealer:latest
-            env_file: .env
-
-        volumes:
-          data:
-
-        EOF
+      run: cp ${{ github.action_path }}/docker-compose.yaml .
 
     - name: docker versions
       shell: bash
