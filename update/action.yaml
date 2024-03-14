@@ -65,7 +65,7 @@ runs:
 
     - name: push secrets to branch
       if: steps.check.outputs.triggered == 'true'
-      uses: EndBug/add-and-commit@v7 # https://github.com/marketplace/actions/add-commit
+      uses: EndBug/add-and-commit@v8 # https://github.com/marketplace/actions/add-commit
       with:
         # The arguments for the `git add` command (see the paragraph below for more info)
         # add only sealed-secret files
