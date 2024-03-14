@@ -24,3 +24,5 @@ jobs:
         uses: open-turo/action-renovate@v1
         with:
           github-token: ${{ secrets.TURO_GITHUB_DEPENDENCY_MANAGER_TOKEN }}
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
