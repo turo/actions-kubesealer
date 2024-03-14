@@ -30,7 +30,7 @@ runs:
 
     - name: checkout branch from comment
       if: steps.check.outputs.triggered == 'true'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: ${{ steps.comment-branch.outputs.head_ref }}
         token: ${{ inputs.github-personal-access-token }}

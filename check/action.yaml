@@ -26,7 +26,7 @@ runs:
       shell: bash
       run: echo "Skipping - no secret templates were changed"
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       if: steps.changes.outputs.secret-templates == 'true'
 
     - name: run sync
