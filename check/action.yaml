@@ -78,7 +78,7 @@ runs:
 
     - name: Delete instructions comment
       if: (steps.changes.outputs.secret-templates != 'true' || success()) && steps.fc.outputs.comment-id != ''
-      uses: jungwinter/comment@v1
+      uses: winterjung/comment@v1
       with:
         type: delete
         comment_id: ${{ steps.fc.outputs.comment-id }}
