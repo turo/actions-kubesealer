@@ -22,7 +22,7 @@ services:
       - "./1password-credentials.json:/home/opuser/.op/1password-credentials.json"
       - "data:/home/opuser/.op/data"
   kubesealer:
-    image: turo/kubesealer:4.11.0
+    image: turo/kubesealer:4.13.0
     env_file: .env
 
 volumes:
