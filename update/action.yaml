@@ -13,7 +13,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: xt0rted/pull-request-comment-branch@v2
+    - uses: xt0rted/pull-request-comment-branch@v3
       id: comment-branch
       with:
         repo_token: ${{ inputs.github-personal-access-token }}
