@@ -12,6 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: open-turo/actions-security/static-analysis@v1
+      - uses: open-turo/actions-security/static-analysis@v3
         with:
           semgrep-app-token: ${{ secrets.SEMGREP_APP_TOKEN }}
