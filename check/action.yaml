@@ -74,7 +74,7 @@ runs:
           ```
           @kubesealer run
           ```
-          If you have issues, please each out in [#devops](https://team-turo.slack.com/archives/C1ZP61K7S)
+          If you have issues, please each out in [#platform-support](https://team-turo.slack.com/archives/C1ZP61K7S)
 
     - name: Delete instructions comment
       if: (steps.changes.outputs.secret-templates != 'true' || success()) && steps.fc.outputs.comment-id != ''
