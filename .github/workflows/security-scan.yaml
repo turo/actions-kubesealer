@@ -12,7 +12,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: open-turo/actions-security/static-analysis@v3
         with:
           semgrep-app-token: ${{ secrets.SEMGREP_APP_TOKEN }}
