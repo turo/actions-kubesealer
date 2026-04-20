@@ -38,27 +38,26 @@ runs:
       shell: bash
       run: |
         docker --version
-        docker-compose --version
 
     - name: start 1password connect
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose up -d op-connect-api op-connect-sync
+      run: docker compose up -d op-connect-api op-connect-sync
 
     - name: logs
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
       working-directory: ${{ runner.temp }}/kubesealer
-      run: docker-compose logs
+      run: docker compose logs
 
     - name: kubesealer sync
       shell: bash
       env:
         COMPOSE_PROJECT_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
-      run: docker-compose -f ${RUNNER_TEMP}/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
+      run: docker compose -f ${RUNNER_TEMP}/kubesealer/docker-compose.yaml run --rm -v "$(pwd):/src" kubesealer turo-kubesealer sync --recursive --certs /certs /src
 
     - name: cleanup kubesealer
       if: always()
@@ -70,8 +69,8 @@ runs:
         echo "List running docker containers"
         docker ps -a
         if [ -f docker-compose.yaml ]; then
-          echo "Terminate docker-compose"
-          docker-compose down --remove-orphans
+          echo "Terminate docker compose"
+          docker compose down --remove-orphans
         fi
         echo "List running docker containers"
         docker ps -a
