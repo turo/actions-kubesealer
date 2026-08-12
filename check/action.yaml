@@ -31,7 +31,7 @@ runs:
 
     - name: run sync
       if: steps.changes.outputs.secret-templates == 'true'
-      uses: turo/actions-kubesealer/run-sync@v1
+      uses: turo/actions-kubesealer/run-sync@compose-v2
       with:
         op-token: ${{ inputs.op-token }}
         op-credentials-json-base64: ${{ inputs.op-credentials-json-base64 }}
